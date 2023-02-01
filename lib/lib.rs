@@ -68,7 +68,7 @@ impl ECC {
     pub fn to_pem(&self, path: &str) {
         match fs::write(path, &self.private_key()) {
             Ok(bytes_written) => println!("{:?} bytes written to {}", bytes_written, path),
-            Err(e) => println!("Failed to write data: {}", e),
+            Err(e) => println!("Failed to write data: {:?}", e),
         }
     }
 
@@ -86,7 +86,7 @@ impl ECC {
     pub fn save_users_data(&self, path: &str) {
         match fs::write(path, bincode::serialize(&self.user).unwrap()) {
             Ok(bytes_written) => println!("{:?} bytes written to {}", bytes_written, path),
-            Err(e) => println!("Failed to write data: {}", e),
+            Err(e) => println!("Failed to write data: {:?}", e),
         }
     }
 
