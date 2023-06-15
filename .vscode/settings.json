@@ -1,11 +1,16 @@
 {
-    "cSpell.words": [
-        "ciphertext",
-        "keypair",
-        "loooooooooooooooooooooooooooooooooooooool",
-        "pubkey",
-        "seckey",
-        "secp",
-        "strcode"
-    ]
+  "cSpell.words": [
+    "ciphertext",
+    "keypair",
+    "loooooooooooooooooooooooooooooooooooooool",
+    "pubkey",
+    "seckey",
+    "secp",
+    "strcode"
+  ],
+  "rust-analyzer.linkedProjects": [
+    ".\\Cargo.toml",
+    ".\\Cargo.toml",
+    ".\\Cargo.toml"
+  ]
 }

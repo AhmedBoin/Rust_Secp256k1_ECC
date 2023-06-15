@@ -15,7 +15,7 @@ fn main() {
         // x.load_users_data("x_users.bin");
         x_tx.send(x.public_key().to_vec()).unwrap();
         match y_rx.recv() {
-            Ok(key) => x.add_user("y", key.try_into().unwrap()),
+            Ok(key) => x.add_user("y", &key).unwrap(),
             Err(e) => println!("{:?}", e),
         }
         // let data = bincode::serialize("Hello, world!").unwrap();
@@ -26,9 +26,9 @@ fn main() {
 
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Encryption
-        x_tx.send(x.encrypt(&data, "y")).unwrap();
-        // x.to_pem("x.pem")
-        // x.save_users_data("x_users.bin")
+        x_tx.send(x.encrypt(&data, "y").unwrap()).unwrap();
+        // x.to_pem("x.pem");
+        // x.save_users_data("x_users.bin");
     });
 
     let th2 = thread::spawn(move || {
@@ -39,25 +39,26 @@ fn main() {
         // y.load_users_data("y_users.bin");
         y_tx.send(y.public_key().to_vec()).unwrap();
         match x_rx.recv() {
-            Ok(key) => y.add_user("x", key.try_into().unwrap()),
+            Ok(key) => y.add_user("x", &key).unwrap(),
             Err(e) => println!("{:?}", e),
         }
         let data = x_rx.recv().unwrap();
         let sign = x_rx.recv().unwrap();
-        match y.verify(&data, &sign, "x") {
-            Ok(()) => println!("Correct key"),
-            Err(e) => println!("{e:?}"),
+        if y.verify(&data, &sign, "x").unwrap() {
+            println!("Correct key");
+        } else {
+            println!("Incorrect key");
         }
 
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Decryption
         let data = x_rx.recv().unwrap();
         println!("{data:?}");
-        let data = y.decrypt(&data, "x");
+        let data = y.decrypt(&data, "x").unwrap();
         // println!("{}", bincode::deserialize::<&str>(&data).unwrap());
         println!("{}", String::from_utf8(data).unwrap());
-        // y.to_pem("y.pem")
-        // y.save_users_data("y_users.bin")
+        // y.to_pem("y.pem");
+        // y.save_users_data("y_users.bin");
     });
 
     th1.join().unwrap();

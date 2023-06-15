@@ -10,10 +10,13 @@ path = "./lib/lib.rs"
 [dependencies]
 lazy_static = "1.4.0"
 rand = { version = "0.8.5", features = ["std"] }
-secp256k1 = { version = "0.26.0", features = ["serde"] }
+secp256k1 = { version = "0.27.0", features = ["serde", "recovery"] }
+sha3 = "0.10.8"
 aes-gcm = "0.10.1"
+hex = "0.4.3"
 blake3 = "1.3.3"
 serde = { version = "1.0.152", features = ["derive"] }
 bincode = "1.3.3"
 crossbeam-channel = "0.5.6"
-num-bigint-dig = { version = "0.8.2", features = ["prime"] }
+anyhow = "1.0"
+# num-bigint-dig = { version = "0.8.2", features = ["prime"] }
