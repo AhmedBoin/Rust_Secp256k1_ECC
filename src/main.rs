@@ -21,8 +21,16 @@ fn main() {
     let sig = x.sign(msg);
 
     assert_eq!(x.public_key(), recover(msg, &sig).unwrap());
-    assert!(y.verify(msg, &sig, "x").unwrap());
-    assert!(z.verify(msg, &sig, "x").unwrap());
+    let verify1 = match y.verify(msg, &sig, "x") {
+        Ok(_) => true,
+        Err(_) => false,
+    };
+    let verify2 = match z.verify(msg, &sig, "x") {
+        Ok(_) => true,
+        Err(_) => false,
+    };
+    assert!(verify1);
+    assert!(verify2);
 
     // Encryption and Decryption
     let enc1 = x.encrypt(msg, "y").unwrap();

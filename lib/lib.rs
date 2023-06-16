@@ -153,15 +153,15 @@ impl ECC {
         id.try_into().unwrap()
     }
 
-    pub fn verify(&self, data: &[u8], sign: &[u8], user: &str) -> Result<bool, ECCError> {
+    pub fn verify(&self, data: &[u8], sign: &[u8], user: &str) -> Result<(), ECCError> {
         match recover(data, sign) {
             Ok(add) => match address(&add) {
                 Ok(address) => match &self.user.get(user) {
                     Some(user) => {
                         if address == user.address {
-                            Ok(true)
+                            Ok(())
                         } else {
-                            Ok(false)
+                            Err(ECCError::InvalidSignature)
                         }
                     }
                     None => Err(ECCError::UserNotFound(user.to_owned())),
@@ -281,7 +281,11 @@ pub mod test {
 
         let msg = b"Hello, World!";
         let sign = x.sign(msg);
-        assert!(y.verify(msg, &sign, "x").unwrap())
+        let verify = match y.verify(msg, &sign, "x") {
+            Ok(()) => true,
+            Err(_) => false,
+        };
+        assert!(verify);
     }
 
     #[test]
