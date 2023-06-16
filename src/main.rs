@@ -1,66 +1,35 @@
-use std::thread;
-
-use crossbeam_channel::unbounded;
 use encryption::*;
 
+#[allow(unused)]
+#[rustfmt::skip]
 fn main() {
-    let (x_tx, x_rx) = unbounded::<Vec<u8>>();
-    let (y_tx, y_rx) = unbounded::<Vec<u8>>();
+    // initiate some users
+    let mut x = ECC::new();
+    let mut y = ECC::from_hex("98a1441d38b21a6d3e4ced37425a3ef88b1a7c20dc38f64c8cada67b66b59641").unwrap();
+    let mut z = ECC::from_slice(&rand::random::<[u8; 32]>()).unwrap();
 
-    let th1 = thread::spawn(move || {
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // Signing
-        let mut x = ECC::new();
-        // let mut x = ECC::from_pem("x.pem");
-        // x.load_users_data("x_users.bin");
-        x_tx.send(x.public_key().to_vec()).unwrap();
-        match y_rx.recv() {
-            Ok(key) => x.add_user("y", &key).unwrap(),
-            Err(e) => println!("{:?}", e),
-        }
-        // let data = bincode::serialize("Hello, world!").unwrap();
-        let data = "Hello, world!".as_bytes();
-        x_tx.send(data.to_vec()).unwrap();
-        let sign = x.sign(&data);
-        x_tx.send(sign.to_vec()).unwrap();
+    // add users information to each other
+    x.add_user("y", &y.public_key());
+    x.add_user("z", &z.public_key());  //
+    y.add_user("x", &x.public_key());
+    y.add_user("z", &z.public_key());  //
+    z.add_user("x", &x.public_key());
+    z.add_user("y", &y.public_key());  //
 
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // Encryption
-        x_tx.send(x.encrypt(&data, "y").unwrap()).unwrap();
-        // x.to_pem("x.pem");
-        // x.save_users_data("x_users.bin");
-    });
+    // signing and verification
+    let msg = b"Hello, World!";
+    let sig = x.sign(msg);
 
-    let th2 = thread::spawn(move || {
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // Verifying
-        let mut y = ECC::new();
-        // let mut y = ECC::from_pem("y.pem");
-        // y.load_users_data("y_users.bin");
-        y_tx.send(y.public_key().to_vec()).unwrap();
-        match x_rx.recv() {
-            Ok(key) => y.add_user("x", &key).unwrap(),
-            Err(e) => println!("{:?}", e),
-        }
-        let data = x_rx.recv().unwrap();
-        let sign = x_rx.recv().unwrap();
-        if y.verify(&data, &sign, "x").unwrap() {
-            println!("Correct key");
-        } else {
-            println!("Incorrect key");
-        }
+    assert_eq!(x.public_key(), recover(msg, &sig).unwrap());
+    assert!(y.verify(msg, &sig, "x").unwrap());
+    assert!(z.verify(msg, &sig, "x").unwrap());
 
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // Decryption
-        let data = x_rx.recv().unwrap();
-        println!("{data:?}");
-        let data = y.decrypt(&data, "x").unwrap();
-        // println!("{}", bincode::deserialize::<&str>(&data).unwrap());
-        println!("{}", String::from_utf8(data).unwrap());
-        // y.to_pem("y.pem");
-        // y.save_users_data("y_users.bin");
-    });
+    // Encryption and Decryption
+    let enc1 = x.encrypt(msg, "y").unwrap();
+    let enc2 = x.encrypt(msg, "z").unwrap();
+    assert_ne!(enc1, enc2);
 
-    th1.join().unwrap();
-    th2.join().unwrap();
+    let dec1 = y.decrypt(&enc1, "x").unwrap();
+    let dec2 = z.decrypt(&enc2, "x").unwrap();
+    assert_eq!(dec1, dec2);
 }
